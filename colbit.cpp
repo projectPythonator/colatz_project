@@ -5,10 +5,9 @@
  * this program is for running through numbers in the colatz conjecture
  * it checks for cycles that are greater then there n in starting range
  * it uses an avl tree 
- * we use the number 68 for gaps in insertion is because to cut down 
- * on the costly mpz_t to string converstion that would happen so many
- * times if we didnt cut down and its been proven then no k cycles 
- * of k=68 or have 1 to 68 odd numbers in the sequence other then the 
+ * we use the number 2 billion to minimize the amount of inserts we do
+ * in truth we are more worried about throwing our selves into a cycle
+ * asap then how fast we relize we are in a cycle  other then the 
  * trival 4,2,1,4,2,1...
  * my method is n=3*n+1 then right shift n till its odd again
  * works in cunjution with the library gmp 6.1.1
@@ -361,7 +360,6 @@ void mod_the_og_file()
     //make my string to write to them and skip the first two lines
     std::string write_str; 
     std::getline ( mod_file , write_str );
-    std::getline ( mod_file , write_str );
     //write the rest of the lines to the temp file
     while( std::getline( mod_file , write_str ))
     {
@@ -370,7 +368,7 @@ void mod_the_og_file()
     //close both files and then rename the temp one to be the same as old
     my_temp_file.close ();
     mod_file.close     ();
-    std::string oldname = "numleft.txt";
+    std::string oldname = "tnumleft.txt";
     std::string newname = "numsleft.txt";
     int result = std::rename ( oldname.c_str() , newname.c_str() );
     if ( result == 0 )
@@ -419,22 +417,20 @@ int main()
     //explained at very bottom
     Begining:
     //declaring varriables used in program
-    mpz_t mainVar , ONE , TWO , THREE , HELPER , finish;
+    mpz_t mainVar , ONE , TWO , THREE , HELPER;
     //setting up strings and file mods needed in program
     std::string strStar;
-    std::string strFin;
     std::ifstream in_file_nums ("numsleft.txt");
     std::getline       (in_file_nums, strStar);
-    std::getline       (in_file_nums, strFin);
     in_file_nums.close ();
     mod_the_og_file    ();
     //this is where all the inits before the main range loop happen 
     mpz_init_set_str    ( mainVar , strStar.c_str() , 10 ); //main varriable that we work with
     mpz_init_set_str    ( HELPER  , strStar.c_str() , 10 ); //helper to use in the compare function
-    mpz_init_set_str    ( finish  , strFin.c_str () , 10 ); //indicates when our current working range is done
-    mpz_init_set_si     ( ONE   , 1 );                      //var One
-    mpz_init_set_si     ( TWO   , 2 );                      //var Two
-    mpz_init_set_si     ( THREE , 3 );                      //var Three
+    mpz_init_set_si     ( ONE     , 1 );                    //var One
+    mpz_init_set_si     ( TWO     , 2 );                    //var Two
+    mpz_init_set_si     ( THREE   , 3 );                    //var Three
+    std::cout <<   strStar  << std::endl;
     //i like to keep time
     auto t1 = Clock::now();
     /*main range loop
@@ -446,22 +442,20 @@ int main()
      * the while loop inside is the main working loop
      * see docs above for desciption of functions used otherwise
      */
-    for( ; mpz_cmp ( mainVar , finish )<=0 
-         ; mpz_add ( mainVar , HELPER , TWO ))
+    for( long amt = 100000000000 ; amt ; --amt , mpz_add ( mainVar , HELPER , TWO ) )
     {
-        int checker=0;
         AVLtree<std::string>* cycle_checker_tree = new AVLtree<std::string>();
 
-        mpz_set         ( HELPER , mainVar );
+        mpz_set         ( HELPER  , mainVar );
         mpz_mul         ( mainVar , mainVar , THREE );
         mpz_add         ( mainVar , mainVar , ONE );
-        mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1(mainVar , 1));
+        mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1 ));
 
-        while(mpz_cmp( mainVar , HELPER ) >= 0)
+        for( int checker = 2000000000 ; mpz_cmp ( mainVar , HELPER ) >= 0 ; --checker)
         {
             if(!checker)
             {
-                const char* temp = mpz_get_str(NULL , 16, mainVar);
+                const char* temp = mpz_get_str ( NULL , 16 , mainVar );
                 std::string umar(temp);
                 delete [] temp;
 
@@ -469,8 +463,8 @@ int main()
                 {
                     mpz_mul         ( mainVar , mainVar , THREE);
                     mpz_add         ( mainVar , mainVar , ONE);
-            	    mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1(mainVar , 1));
-                    checker = 68;
+            	    mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1 ));
+                    checker = 100000000;
                 }
                 else
                 {
@@ -482,8 +476,7 @@ int main()
             {
                 mpz_mul         ( mainVar , mainVar , THREE );
                 mpz_add         ( mainVar , mainVar , ONE );
-            	mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1(mainVar , 1) );
-                --checker;
+            	mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1)  );
             }
         }
         delete cycle_checker_tree;  
@@ -492,9 +485,9 @@ int main()
     auto t2 = Clock::now();
     std::cout << "Delta t2-t1: " 
               << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count()
-              << " seconds" << std::endl;
-    std::cout <<   strStar  << std::endl;
-    std::cout <<   strFin   << std::endl;
+              <<           " seconds "           << std::endl;
+    std::cout <<             strStar             << std::endl;
+    std::cout << mpz_get_str( NULL,10, mainVar ) << std::endl;
     //here we check if the nums file is empty and jump to start of main if not empty
     if(!check_file())
     {
@@ -505,3 +498,4 @@ int main()
         return 0;
     }
 }
+
