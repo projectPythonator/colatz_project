@@ -415,87 +415,81 @@ void mod_the_og_file()
 int main() 
 {
     //explained at very bottom
-    Begining:
-    //declaring varriables used in program
-    mpz_t mainVar , ONE , TWO , THREE , HELPER;
-    //setting up strings and file mods needed in program
-    std::string strStar;
-    std::ifstream in_file_nums ("numsleft.txt");
-    std::getline       (in_file_nums, strStar);
-    in_file_nums.close ();
-    mod_the_og_file    ();
-    //this is where all the inits before the main range loop happen 
-    mpz_init_set_str    ( mainVar , strStar.c_str() , 10 ); //main varriable that we work with
-    mpz_init_set_str    ( HELPER  , strStar.c_str() , 10 ); //helper to use in the compare function
-    mpz_init_set_si     ( ONE     , 1 );                    //var One
-    mpz_init_set_si     ( TWO     , 2 );                    //var Two
-    mpz_init_set_si     ( THREE   , 3 );                    //var Three
-    std::cout <<   strStar  << std::endl;
-    //i like to keep time
-    auto t1 = Clock::now();
-    /*main range loop
-     * params
-     * checker::int, we use it to cut down on how many times
-     *          we insert into the avl tree(see docs at top for more)
-     * cycle_checker_tree::avl tree, the tree i use to catch
-     *          any cycles
-     * the while loop inside is the main working loop
-     * see docs above for desciption of functions used otherwise
-     */
-    for( long amt = 100000000000 ; amt ; --amt , mpz_add ( mainVar , HELPER , TWO ) )
-    {
-        AVLtree<std::string>* cycle_checker_tree = new AVLtree<std::string>();
-
-        mpz_set         ( HELPER  , mainVar );
-        mpz_mul         ( mainVar , mainVar , THREE );
-        mpz_add         ( mainVar , mainVar , ONE );
-        mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1 ));
-
-        for( int checker = 2000000000 ; mpz_cmp ( mainVar , HELPER ) >= 0 ; --checker)
+    do{
+        //declaring varriables used in program
+        mpz_t mainVar , ONE , TWO , THREE , HELPER;
+        //setting up strings and file mods needed in program
+        std::string strStar;
+        std::ifstream in_file_nums ("numsleft.txt");
+        std::getline       (in_file_nums, strStar);
+        in_file_nums.close ();
+        mod_the_og_file    ();
+        //this is where all the inits before the main range loop happen 
+        mpz_init_set_str    ( mainVar , strStar.c_str() , 10 ); //main varriable that we work with
+        mpz_init_set_str    ( HELPER  , strStar.c_str() , 10 ); //helper to use in the compare function
+        mpz_init_set_si     ( ONE     , 1 );                    //var One
+        mpz_init_set_si     ( TWO     , 2 );                    //var Two
+        mpz_init_set_si     ( THREE   , 3 );                    //var Three
+        std::cout <<   strStar  << std::endl;
+        //i like to keep time
+        auto t1 = Clock::now();
+        /*main range loop
+         * params
+         * checker::int, we use it to cut down on how many times
+         *          we insert into the avl tree(see docs at top for more)
+         * cycle_checker_tree::avl tree, the tree i use to catch
+         *          any cycles
+         * the while loop inside is the main working loop
+         * see docs above for desciption of functions used otherwise
+         */
+        for( long amt = 100000000000 ; amt ; --amt , mpz_add ( mainVar , HELPER , TWO ) )
         {
-            if(!checker)
-            {
-                const char* temp = mpz_get_str ( NULL , 16 , mainVar );
-                std::string umar(temp);
-                delete [] temp;
+            AVLtree<std::string>* cycle_checker_tree = new AVLtree<std::string>();
 
-                if(cycle_checker_tree->insert(umar))
+            mpz_set         ( HELPER  , mainVar );
+            mpz_mul         ( mainVar , mainVar , THREE );
+            mpz_add         ( mainVar , mainVar , ONE );
+            mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1 ));
+
+            for( int checker = 2000000000 ; mpz_cmp ( mainVar , HELPER ) >= 0 ; --checker)
+            {
+                if(!checker)
                 {
-                    mpz_mul         ( mainVar , mainVar , THREE);
-                    mpz_add         ( mainVar , mainVar , ONE);
-            	    mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1 ));
-                    checker = 100000000;
+                    const char* temp = mpz_get_str ( NULL , 16 , mainVar );
+                    std::string umar(temp);
+                    delete [] temp;
+
+                    if(cycle_checker_tree->insert(umar))
+                    {
+                        mpz_mul         ( mainVar , mainVar , THREE);
+                        mpz_add         ( mainVar , mainVar , ONE);
+            	        mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1 ));
+                        checker = 100000000;
+                    }
+                    else
+                    {
+                        std::cout << mpz_get_str( NULL,10, mainVar ) << std::endl;
+                        return 0;
+                    }
                 }
                 else
                 {
-                    std::cout << mpz_get_str( NULL,10, mainVar ) << std::endl;
-                    return 0;
+                    mpz_mul         ( mainVar , mainVar , THREE );
+                    mpz_add         ( mainVar , mainVar , ONE );
+            	    mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1)  );
                 }
             }
-            else
-            {
-                mpz_mul         ( mainVar , mainVar , THREE );
-                mpz_add         ( mainVar , mainVar , ONE );
-            	mpz_tdiv_q_2exp ( mainVar , mainVar , mpz_scan1 ( mainVar , 1)  );
-            }
+            delete cycle_checker_tree;  
         }
-        delete cycle_checker_tree;  
-    }
-    //printing the time our range took and the numbers we covered between
-    auto t2 = Clock::now();
-    std::cout << "Delta t2-t1: " 
-              << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count()
-              <<           " seconds "           << std::endl;
-    std::cout <<             strStar             << std::endl;
-    std::cout << mpz_get_str( NULL,10, mainVar ) << std::endl;
-    //here we check if the nums file is empty and jump to start of main if not empty
-    if(!check_file())
-    {
-        goto Begining;
-    }
-    else
-    {
-        return 0;
-    }
+        //printing the time our range took and the numbers we covered between
+        auto t2 = Clock::now();
+        std::cout << "Delta t2-t1: " 
+                  << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count()
+                  <<           " seconds "           << std::endl;
+        std::cout <<             strStar             << std::endl;
+        std::cout << mpz_get_str( NULL,10, mainVar ) << std::endl;
+        //here we check if the nums file is empty and jump to start of main if not empty
+    }while(!check_file());
+    return 0;
 }
 
